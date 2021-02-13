@@ -82,9 +82,7 @@ class Client:
 
     def _upload_files(self, files: [str], token: str):
         """Uploads the files to the previously created file share."""
-        transfer_id = 1
-        for file in files:
-            self.session.post(urljoin(self.host, fr"Web%20Client/Share/MultipleFileUploadResult.htm?Command=UploadFileShare&TransferID={transfer_id}&File={file}&ShareToken={token}&IsVirtual=0&CsrfToken={self.csrf_token}"),
+        for index, file in enumerate(files):
+            self.session.post(urljoin(self.host, fr"Web%20Client/Share/MultipleFileUploadResult.htm?Command=UploadFileShare&TransferID={index + 1}&File={file}&ShareToken={token}&IsVirtual=0&CsrfToken={self.csrf_token}"),
                               files={"file": open(file, 'rb')})
-            transfer_id += 1
 
