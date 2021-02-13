@@ -2,6 +2,7 @@ import re
 import time
 from collections import deque
 from urllib.parse import urlsplit, unquote, urljoin
+from datetime import datetime, timedelta
 
 import requests
 
@@ -55,8 +56,8 @@ class Client:
         self._upload_files(files=files, token=token)
         return url
 
-    def _create_file_share(self, expiry, password: str = None):
-        """Creates a file share in MFT and returns the url and token."""
+    def _create_file_share(self, expiry: int = int((datetime.now() + timedelta(days=30)).timestamp()), password: str = None):
+        """Creates a file share in MFT and returns the url and token. Expiration defaults to a month from run."""
         with self.session as session:
             session.headers.update({'X-CSRF-Token': self.csrf_token})
 
