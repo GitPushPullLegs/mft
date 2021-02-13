@@ -48,7 +48,7 @@ class Client:
             self.visit_history.append(r)
             return r
 
-    def send_files(self, files: [str], expiry, password: str = None):
+    def send_files(self, files: [str], expiry: int = int((datetime.now() + timedelta(days=30)).timestamp()), password: str = None):
         """Uploads the files to the MFT server and returns the URL to be shared with the recipient."""
         data = self._create_file_share(expiry=expiry, password=password)
         url = unquote(data['url'])
@@ -56,7 +56,7 @@ class Client:
         self._upload_files(files=files, token=token)
         return url
 
-    def _create_file_share(self, expiry: int = int((datetime.now() + timedelta(days=30)).timestamp()), password: str = None):
+    def _create_file_share(self, expiry: int, password: str = None):
         """Creates a file share in MFT and returns the url and token. Expiration defaults to a month from run."""
         with self.session as session:
             session.headers.update({'X-CSRF-Token': self.csrf_token})
