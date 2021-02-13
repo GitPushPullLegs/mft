@@ -1,5 +1,5 @@
 from collections import deque
-from urllib.parse import urlsplit, urljoin, unquote
+from urllib.parse import urlsplit, urljoin, unquote, urlencode
 
 import requests
 from lxml import etree
@@ -51,10 +51,7 @@ class Client:
         url = unquote(data['url'])
         token = data['token']
         self.upload_files(files=files, token=token)
-# Responds with share token, share url, date created.
-# 2. MultipleFileUpload
-# POST https://mft.monet.k12.ca.us/Web%20Client/Share/MultipleFileUploadResult.htm?Command=UploadFileShare&TransferID=1&File=C%3A%5Cfakepath%5Creal_upload.xlsx&ShareToken=8695877EBDFA2B4DB7DFF7D751621429DE121E01&IsVirtual=0&CsrfToken=0F542D05C4224D0268826493CDCF4114
-# File path is "C:\fakepath\FILENAME, Shareurl from prev request, CsrfToken in previous request headers, TransferId starts at 1 and increments for each file.
+        return url
 
     def create_file_share(self, expiry, password: str = None):
         with self.session as session:
@@ -77,12 +74,13 @@ class Client:
             }
 
             response = session.post(r"https://mft.monet.k12.ca.us/Web%20Client/Share/CreateFileShare.xml?Command=CreateFileShare", data=payload)
-            print(response.text)
             return {"url": re.findall(r"(?<=<ShareURL>)[\W\w]+(?=<\/ShareURL>)", response.text)[0],  # ShareURL Encoded
                     "token": re.findall(r"(?<=<ShareToken>)[\W\w]+(?=<\/ShareToken>)", response.text)[0]}
 
     def upload_files(self, files: [str], token: str):
-        payload = {
-
-        }
+        transfer_id = 1
+        for file in files:
+            self.session.post(fr"https://mft.monet.k12.ca.us/Web%20Client/Share/MultipleFileUploadResult.htm?Command=UploadFileShare&TransferID={transfer_id}&File={file}&ShareToken={token}&IsVirtual=0&CsrfToken={self.csrf_token}",
+                              files={"file": open(file, 'rb')})
+            transfer_id += 1
 
