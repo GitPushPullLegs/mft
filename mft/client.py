@@ -48,7 +48,7 @@ class Client:
             self.visit_history.append(r)
             return r
 
-    def send_files(self, files: [str], expiry: int = int((datetime.now() + timedelta(days=30)).timestamp()), password: str = None):
+    def upload_files(self, files: [str], expiry: int = int((datetime.now() + timedelta(days=30)).timestamp()), password: str = None):
         """Uploads the files to the MFT server and returns the URL to be shared with the recipient."""
         data = self._create_file_share(expiry=expiry, password=password)
         url = unquote(data['url'])
