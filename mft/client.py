@@ -11,9 +11,18 @@ class Client:
     _HEADERS = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"}
 
     def __init__(self, host: str):
+        """
+        Creates a client for SolarWinds Serv-U Managed File Transfer (MFT).
+        :param host: Usually the URL to the login page.
+        """
         self.host = host
 
     def login(self, username: str, password: str):
+        """
+        Logs into MFT.
+        :param username: Your email address.
+        :param password: Your password.
+        """
         self.credentials = {
             'user': username,
             'pword': password,
@@ -49,7 +58,13 @@ class Client:
             return r
 
     def upload_files(self, files: [str], expiry: int = int((datetime.now() + timedelta(days=30)).timestamp()), password: str = None) -> str:
-        """Uploads the files to the MFT server and returns the URL to be shared with the recipient."""
+        """
+        Uploads the files to the MFT server and returns the URL to be shared with the recipient.
+        :param files: A list of the files to be shared with this link.
+        :param expiry: A timestamp for when the files should expire; defaults to a month away.
+        :param password: An optional password to protect the files.
+        :return: The link to the files.
+        """
         data = self._create_file_share(expiry=expiry, password=password)
         url = unquote(data['url'])
         token = data['token']
