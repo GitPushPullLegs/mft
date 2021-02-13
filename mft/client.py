@@ -8,7 +8,9 @@ import requests
 
 class Client:
     _HEADERS = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"}
-    _HOST = 'https://mft.monet.k12.ca.us/'
+
+    def __init__(self, host: str):
+        self.host = host
 
     def login(self, username: str, password: str):
         self.credentials = {
@@ -27,8 +29,8 @@ class Client:
             print(exc)
 
     def _login(self):
-        self.session.get(self._HOST)
-        return self.visit_history[-1].status_code == 200 and self.visit_history[-1].url == self._HOST
+        self.session.get(self.host)
+        return self.visit_history[-1].status_code == 200 and self.visit_history[-1].url == self.host
 
 
     def _event_hooks(self, r ,*args, **kwargs):
