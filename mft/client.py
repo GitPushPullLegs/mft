@@ -42,7 +42,7 @@ class Client:
             self.session.post(urljoin(self.host, fr"Web%20Client/Login.xml?Command=Login&Sync={int(time.time())}"), data=self.credentials)
         elif path == '/Web%20Client/Login.xml' and r.status_code == 200:
             self.session.get(urljoin(self.host, r"Web%20Client/Share/Console.htm"))
-            self.csrf_token = re.findall(r"(?<=<CsrfToken>)[a-zA-Z0-9_]+(?=<\/CsrfToken>)", r.text)[0]
+            self.csrf_token = re.findall(r"(?<=<CsrfToken>)[\W\w]+(?=<\/CsrfToken>)", r.text)[0]
             self.session.cookies.update(r.cookies.get_dict())
         else:
             self.visit_history.append(r)
