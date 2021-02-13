@@ -46,6 +46,7 @@ class Client:
             return r
 
     def send_files(self, files: [str], expiry, password: str = None):
+        """Uploads the files to the MFT server and returns the URL to be shared with the recipient."""
         data = self._create_file_share(expiry=expiry, password=password)
         url = unquote(data['url'])
         token = data['token']
@@ -53,6 +54,7 @@ class Client:
         return url
 
     def _create_file_share(self, expiry, password: str = None):
+        """Creates a file share in MFT and returns the url and token."""
         with self.session as session:
             session.headers.update({'X-CSRF-Token': self.csrf_token})
 
@@ -77,6 +79,7 @@ class Client:
                     "token": re.findall(r"(?<=<ShareToken>)[\W\w]+(?=<\/ShareToken>)", response.text)[0]}
 
     def _upload_files(self, files: [str], token: str):
+        """Uploads the files to the previously created file share."""
         transfer_id = 1
         for file in files:
             self.session.post(fr"https://mft.monet.k12.ca.us/Web%20Client/Share/MultipleFileUploadResult.htm?Command=UploadFileShare&TransferID={transfer_id}&File={file}&ShareToken={token}&IsVirtual=0&CsrfToken={self.csrf_token}",
