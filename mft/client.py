@@ -1,7 +1,7 @@
 import re
 import time
 from collections import deque
-from urllib.parse import urlsplit, unquote
+from urllib.parse import urlsplit, unquote, urljoin
 
 import requests
 
@@ -38,9 +38,9 @@ class Client:
         print(r.url, r.status_code)
         if path == '/' and r.status_code == 200:
             self.session.cookies.update(r.cookies.get_dict())
-            self.session.post(fr"https://mft.monet.k12.ca.us/Web%20Client/Login.xml?Command=Login&Sync={int(time.time())}", data=self.credentials)
+            self.session.post(urljoin(self.host, fr"Web%20Client/Login.xml?Command=Login&Sync={int(time.time())}"), data=self.credentials)
         elif path == '/Web%20Client/Login.xml' and r.status_code == 200:
-            self.session.get(r"https://mft.monet.k12.ca.us/Web%20Client/Share/Console.htm")
+            self.session.get(urljoin(self.host, r"Web%20Client/Share/Console.htm"))
             self.csrf_token = re.findall(r"(?<=<CsrfToken>)[a-zA-Z0-9_]+(?=<\/CsrfToken>)", r.text)[0]
             self.session.cookies.update(r.cookies.get_dict())
         else:
@@ -76,7 +76,7 @@ class Client:
                 "MaxFileSize": 0
             }
 
-            response = session.post(r"https://mft.monet.k12.ca.us/Web%20Client/Share/CreateFileShare.xml?Command=CreateFileShare", data=payload)
+            response = session.post(urljoin(self.host, r"Web%20Client/Share/CreateFileShare.xml?Command=CreateFileShare"), data=payload)
             return {"url": re.findall(r"(?<=<ShareURL>)[\W\w]+(?=<\/ShareURL>)", response.text)[0],  # ShareURL Encoded
                     "token": re.findall(r"(?<=<ShareToken>)[\W\w]+(?=<\/ShareToken>)", response.text)[0]}
 
@@ -84,7 +84,7 @@ class Client:
         """Uploads the files to the previously created file share."""
         transfer_id = 1
         for file in files:
-            self.session.post(fr"https://mft.monet.k12.ca.us/Web%20Client/Share/MultipleFileUploadResult.htm?Command=UploadFileShare&TransferID={transfer_id}&File={file}&ShareToken={token}&IsVirtual=0&CsrfToken={self.csrf_token}",
+            self.session.post(urljoin(self.host, fr"Web%20Client/Share/MultipleFileUploadResult.htm?Command=UploadFileShare&TransferID={transfer_id}&File={file}&ShareToken={token}&IsVirtual=0&CsrfToken={self.csrf_token}"),
                               files={"file": open(file, 'rb')})
             transfer_id += 1
 
