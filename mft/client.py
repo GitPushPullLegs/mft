@@ -1,10 +1,9 @@
-from collections import deque
-from urllib.parse import urlsplit, urljoin, unquote, urlencode
-
-import requests
-from lxml import etree
 import re
 import time
+from collections import deque
+from urllib.parse import urlsplit, unquote
+
+import requests
 
 
 class Client:
@@ -47,13 +46,13 @@ class Client:
             return r
 
     def send_files(self, files: [str], expiry, password: str = None):
-        data = self.create_file_share(expiry=expiry, password=password)
+        data = self._create_file_share(expiry=expiry, password=password)
         url = unquote(data['url'])
         token = data['token']
-        self.upload_files(files=files, token=token)
+        self._upload_files(files=files, token=token)
         return url
 
-    def create_file_share(self, expiry, password: str = None):
+    def _create_file_share(self, expiry, password: str = None):
         with self.session as session:
             session.headers.update({'X-CSRF-Token': self.csrf_token})
 
@@ -77,7 +76,7 @@ class Client:
             return {"url": re.findall(r"(?<=<ShareURL>)[\W\w]+(?=<\/ShareURL>)", response.text)[0],  # ShareURL Encoded
                     "token": re.findall(r"(?<=<ShareToken>)[\W\w]+(?=<\/ShareToken>)", response.text)[0]}
 
-    def upload_files(self, files: [str], token: str):
+    def _upload_files(self, files: [str], token: str):
         transfer_id = 1
         for file in files:
             self.session.post(fr"https://mft.monet.k12.ca.us/Web%20Client/Share/MultipleFileUploadResult.htm?Command=UploadFileShare&TransferID={transfer_id}&File={file}&ShareToken={token}&IsVirtual=0&CsrfToken={self.csrf_token}",
