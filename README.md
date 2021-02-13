@@ -9,6 +9,7 @@ A library to facilitate sharing files via SolarWinds Serv-U Managed File Transfe
 
 ```python
 from mft import Client
+from datetime import datetime, timedelta
 
 client = Client(host='https://host.com/')
 client.login(username='your.login@yourdomain.com', password='password')
