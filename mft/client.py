@@ -63,8 +63,8 @@ class Client:
             self.visit_history.append(r)
             return r
 
-    def upload_files(self, files: [str], expiry: int = int((datetime.now() + timedelta(days=30)).timestamp()),
-                     password: str = None) -> str:
+    def create_file_share(self, files: [str], expiry: int = int((datetime.now() + timedelta(days=30)).timestamp()),
+                          password: str = None) -> str:
         """
         Uploads the files to the MFT server and returns the URL to be shared with the recipient.
         :param files: A list of the files to be shared with this link.
