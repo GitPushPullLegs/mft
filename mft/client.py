@@ -131,3 +131,39 @@ class Client:
         }
         response = self.session.post(urljoin(self.host, fr"Web%20Client/Result.xml"), params=params)
         return ET.fromstring(response.text).find(".//ResultText").text
+
+    def list_file_shares(self, count: int = 10):
+        """
+        Lists the number of file shares specified.
+        :param count: Number of file shares to return. Default is 10.
+        :return: A list of file share datum.
+        """
+        self.session.headers.update({'X-CSRF-Token': self.csrf_token})
+        payload = {
+            'ShareType': 1,
+            'NumShares': count,
+            'StartPos': 0
+        }
+        params = {
+            'Command': 'ListFileShares',
+            'Sync': int(time.time())
+        }
+        response = self.session.post(urljoin(self.host, fr"Web%20Client/Share/ListFileShares.xml"), data=payload,
+                                     params=params)
+        root = ET.fromstring(response.text).findall(".//share")
+        file_shares = []
+        for datum in root:
+            file_shares.append({
+                "share_token": datum.find(".//ShareToken").text,
+                "has_password": True if datum.find(".//HasPassword").text == '1' else False,
+                "date_created": datetime.fromtimestamp(int(datum.find(".//DateCreated").text)).strftime("%m/%d/%Y"),
+                "message_subject": unquote(datum.find(".//MsgSubject").text),
+                "first_recipient": datum.find(".//FirstRecipient").text,
+                "number_of_recipients": datum.find(".//NumRecipients").text,
+                "notification_status": datum.find(".//NotificationStatus").text,
+                "total_file_size": datum.find(".//TotalFileSize").text,
+                "number_of_files": datum.find(".//NumFiles").text,
+                "date_of_expiration": datetime.fromtimestamp(int(datum.find(".//DateExpiration").text)).strftime("%m/%d/%Y")
+            })
+
+        return file_shares
