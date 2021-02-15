@@ -1,9 +1,8 @@
-import re
 import time
+import xml.etree.ElementTree as ET
 from collections import deque
 from datetime import datetime, timedelta
 from urllib.parse import urlsplit, unquote, urljoin
-import xml.etree.ElementTree as ET
 
 import requests
 
