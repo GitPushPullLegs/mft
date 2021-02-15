@@ -57,6 +57,7 @@ class Client:
         elif path == '/Web%20Client/Login.xml' and r.status_code == 200:
             self.session.get(urljoin(self.host, r"Web%20Client/Share/Console.htm"))
             self.csrf_token = ET.fromstring(r.text).find(".//CsrfToken").text
+            self.session.headers.update({'X-CSRF-Token': self.csrf_token})
             self.session.cookies.update(r.cookies.get_dict())
         else:
             self.visit_history.append(r)
@@ -79,8 +80,6 @@ class Client:
 
     def _create_file_share(self, expiry: int, password: str = None):
         """Creates a file share in MFT and returns the url and token. Expiration defaults to a month from run."""
-        self.session.headers.update({'X-CSRF-Token': self.csrf_token})
-
         payload = {
             "ShareType": 1,
             "RecipientEmailAddress": "",
@@ -123,7 +122,6 @@ class Client:
 
     def cancel_file_share(self, share_token: str):
         """Invalidates a file share."""
-        self.session.headers.update({'X-CSRF-Token': self.csrf_token})
         params = {
             'Command': 'DeleteFileShare',
             'ShareToken': share_token,
@@ -138,7 +136,6 @@ class Client:
         :param count: Number of file shares to return. Default is 10.
         :return: A list of file share datum.
         """
-        self.session.headers.update({'X-CSRF-Token': self.csrf_token})
         payload = {
             'ShareType': 1,
             'NumShares': count,
