@@ -105,3 +105,14 @@ class Client:
             self.session.post(urljoin(self.host,
                                       fr"Web%20Client/Share/MultipleFileUploadResult.htm?Command=UploadFileShare&TransferID={index + 1}&File={file}&ShareToken={token}&IsVirtual=0&CsrfToken={self.csrf_token}"),
                               files={"file": open(file, 'rb')})
+
+    def cancel_file_share(self, share_token: str):
+        """Invalidates a file share."""
+        self.session.headers.update({'X-CSRF-Token': self.csrf_token})
+        params = {
+            'Command': 'DeleteFileShare',
+            'ShareToken': share_token,
+            'Sync': int(time.time())
+        }
+        response = self.session.post(urljoin(self.host, fr"Web%20Client/Result.xml"), params=params)
+        return ET.fromstring(response.text).find(".//ResultText").text
