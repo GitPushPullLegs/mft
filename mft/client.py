@@ -118,8 +118,8 @@ class Client:
             params['TransferID'] = index + 1
             params['File'] = file
             self.session.post(urljoin(self.host,
-                                      fr"Web%20Client/Share/MultipleFileUploadResult.htm", params=params),
-                              files={"file": open(file, 'rb')})
+                                      fr"Web%20Client/Share/MultipleFileUploadResult.htm"),
+                              files={"file": open(file, 'rb')}, params=params)
 
     def cancel_file_share(self, share_token: str):
         """Invalidates a file share."""
