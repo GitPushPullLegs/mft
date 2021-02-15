@@ -64,7 +64,7 @@ class Client:
             return r
 
     def create_file_share(self, files: [str], expiry: int = int((datetime.now() + timedelta(days=30)).timestamp()),
-                          password: str = None) -> str:
+                          password: str = None, subject: str = "File Share", comments: str = None) -> str:
         """
         Uploads the files to the MFT server and returns the URL to be shared with the recipient.
         :param files: A list of the files to be shared with this link.
@@ -72,13 +72,13 @@ class Client:
         :param password: An optional password to protect the files.
         :return: The link to the files.
         """
-        data = self._create_file_share(expiry=expiry, password=password)
+        data = self._create_file_share(subject=subject, comments=comments, expiry=expiry, password=password)
         url = data['url']
         token = data['token']
         self._upload_files(files=files, token=token)
         return url
 
-    def _create_file_share(self, expiry: int, password: str = None):
+    def _create_file_share(self, subject: str, comments: str, expiry: int, password: str = None):
         """Creates a file share in MFT and returns the url and token. Expiration defaults to a month from run."""
         payload = {
             "ShareType": 1,
@@ -87,8 +87,8 @@ class Client:
             "SenderEmail": self.credentials['user'],
             "NotifyUserOnGuestTransfer": 1,
             "SenderCarbonCopy": 0,
-            "EmailSubject": "MCS MFT",
-            "EmailBody": "",
+            "EmailSubject": subject,
+            "EmailBody": "" if not comments else comments,
             "ExpirationTimestamp": expiry,
             "PasswordIsSet": 0 if not password else 1,
             "Password": '' if not password else password,
