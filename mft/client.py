@@ -68,7 +68,7 @@ class Client:
         :return: The link to the files.
         """
         data = self._create_file_share(expiry=expiry, password=password)
-        url = unquote(data['url'])
+        url = data['url']
         token = data['token']
         self._upload_files(files=files, token=token)
         return url
@@ -96,7 +96,7 @@ class Client:
         response = self.session.post(
             urljoin(self.host, r"Web%20Client/Share/CreateFileShare.xml?Command=CreateFileShare"), data=payload)
         root = ET.fromstring(response.text)
-        return {"url": root.find(".//ShareURL").text,  # ShareURL Encoded
+        return {"url": unquote(root.find(".//ShareURL").text),  # ShareURL Encoded
                 "token": root.find(".//ShareToken").text}
 
     def _upload_files(self, files: [str], token: str):
