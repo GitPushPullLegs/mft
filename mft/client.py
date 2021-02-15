@@ -148,6 +148,15 @@ class Client:
         response = self.session.post(urljoin(self.host, fr"Web%20Client/Share/ListFileShares.xml"), data=payload,
                                      params=params)
         root = ET.fromstring(response.text).findall(".//share")
+        notification_status = {
+            '0': 'Pending',
+            '1': 'Sent',
+            '2': 'Error Sending',
+            '3': 'Downloaded',
+            '4': 'Received',
+            '5': 'Expired'
+        }
+
         file_shares = []
         for datum in root:
             file_shares.append({
@@ -157,7 +166,7 @@ class Client:
                 "message_subject": unquote(datum.find(".//MsgSubject").text),
                 "first_recipient": datum.find(".//FirstRecipient").text,
                 "number_of_recipients": datum.find(".//NumRecipients").text,
-                "notification_status": datum.find(".//NotificationStatus").text,
+                "notification_status": notification_status[datum.find(".//NotificationStatus").text],
                 "total_file_size": datum.find(".//TotalFileSize").text,
                 "number_of_files": datum.find(".//NumFiles").text,
                 "date_of_expiration": datetime.fromtimestamp(int(datum.find(".//DateExpiration").text)).strftime("%m/%d/%Y")
