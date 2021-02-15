@@ -3,6 +3,7 @@ import time
 from collections import deque
 from datetime import datetime, timedelta
 from urllib.parse import urlsplit, unquote, urljoin
+import xml.etree.ElementTree as ET
 
 import requests
 
@@ -52,7 +53,7 @@ class Client:
                               data=self.credentials)
         elif path == '/Web%20Client/Login.xml' and r.status_code == 200:
             self.session.get(urljoin(self.host, r"Web%20Client/Share/Console.htm"))
-            self.csrf_token = re.findall(r"(?<=<CsrfToken>)[\W\w]+(?=<\/CsrfToken>)", r.text)[0]
+            self.csrf_token = ET.fromstring(r.text).find(".//CsrfToken").text
             self.session.cookies.update(r.cookies.get_dict())
         else:
             self.visit_history.append(r)
@@ -95,8 +96,9 @@ class Client:
 
         response = self.session.post(
             urljoin(self.host, r"Web%20Client/Share/CreateFileShare.xml?Command=CreateFileShare"), data=payload)
-        return {"url": re.findall(r"(?<=<ShareURL>)[\W\w]+(?=<\/ShareURL>)", response.text)[0],  # ShareURL Encoded
-                "token": re.findall(r"(?<=<ShareToken>)[\W\w]+(?=<\/ShareToken>)", response.text)[0]}
+        root = ET.fromstring(response.text)
+        return {"url": root.find(".//ShareURL").text,  # ShareURL Encoded
+                "token": root.find(".//ShareToken").text}
 
     def _upload_files(self, files: [str], token: str):
         """Uploads the files to the previously created file share."""
