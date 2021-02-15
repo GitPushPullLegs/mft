@@ -48,8 +48,12 @@ class Client:
         print(r.url, r.status_code)
         if path == '/' and r.status_code == 200:
             self.session.cookies.update(r.cookies.get_dict())
-            self.session.post(urljoin(self.host, fr"Web%20Client/Login.xml?Command=Login&Sync={int(time.time())}"),
-                              data=self.credentials)
+            params = {
+                'Command': 'Login',
+                'Sync': int(time.time())
+            }
+            self.session.post(urljoin(self.host, fr"Web%20Client/Login.xml"),
+                              data=self.credentials, params=params)
         elif path == '/Web%20Client/Login.xml' and r.status_code == 200:
             self.session.get(urljoin(self.host, r"Web%20Client/Share/Console.htm"))
             self.csrf_token = ET.fromstring(r.text).find(".//CsrfToken").text
@@ -92,18 +96,29 @@ class Client:
             "IncludePasswordInEmail": 0,
             "MaxFileSize": 0
         }
+        params = {
+            'Command': 'CreateFileShare'
+        }
 
         response = self.session.post(
-            urljoin(self.host, r"Web%20Client/Share/CreateFileShare.xml?Command=CreateFileShare"), data=payload)
+            urljoin(self.host, r"Web%20Client/Share/CreateFileShare.xml"), data=payload, params=params)
         root = ET.fromstring(response.text)
         return {"url": unquote(root.find(".//ShareURL").text),  # ShareURL Encoded
                 "token": root.find(".//ShareToken").text}
 
     def _upload_files(self, files: [str], token: str):
         """Uploads the files to the previously created file share."""
+        params = {
+            'Command': 'UploadFileShare',
+            'ShareToken': token,
+            'IsVirtual': 0,
+            'CsrfToken': self.csrf_token
+        }
         for index, file in enumerate(files):
+            params['TransferID'] = index + 1
+            params['File'] = file
             self.session.post(urljoin(self.host,
-                                      fr"Web%20Client/Share/MultipleFileUploadResult.htm?Command=UploadFileShare&TransferID={index + 1}&File={file}&ShareToken={token}&IsVirtual=0&CsrfToken={self.csrf_token}"),
+                                      fr"Web%20Client/Share/MultipleFileUploadResult.htm", params=params),
                               files={"file": open(file, 'rb')})
 
     def cancel_file_share(self, share_token: str):
