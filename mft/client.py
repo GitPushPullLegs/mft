@@ -22,7 +22,7 @@ class Client:
     def login(self, username: str, password: str):
         """
         Logs into MFT.
-        :param username: Your email address.
+        :param username: Your username.
         :param password: Your password.
         """
         self.credentials = {

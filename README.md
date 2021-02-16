@@ -12,7 +12,7 @@ from mft import Client
 from datetime import datetime, timedelta
 
 client = Client(host='https://host.com/')
-client.login(username='your.login@yourdomain.com', password='password')
+client.login(username='username', password='password')
 url_to_share = client.create_file_share(files=['/path/to/your/file.txt'],
                                         expiry=int((datetime.now() + timedelta(days=30)).timestamp()),
                                         # Timestamp of when the file should expire.
