@@ -1,0 +1,15 @@
+Metadata-Version: 1.1
+Name: mft
+Version: 0.0.4
+Summary: A package to facilitate sharing files via SolarWinds Managed File Transfer.
+Home-page: https://github.com/GitPushPullLegs/mft
+Author: Joe Aguilar
+Author-email: Jose.Aguilar.6694@gmail.com
+License: GNU General Public License
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Programming Language :: Python

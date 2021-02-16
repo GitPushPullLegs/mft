@@ -10,7 +10,7 @@ setup(
     author_email='Jose.Aguilar.6694@gmail.com',
     license='GNU General Public License',
     packages=find_packages(),
-    install_requires=['requests'],
+    install_requires=['requests', 'urllib3'],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
