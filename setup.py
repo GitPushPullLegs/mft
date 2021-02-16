@@ -10,7 +10,9 @@ setup(
     author_email='Jose.Aguilar.6694@gmail.com',
     license='GNU General Public License',
     packages=['mft'],
-    install_requires=['requests', 'urllib3'],
+    install_requires=['requests>=2.25.1',
+                      'urllib3>=1.26.3',
+                      ],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
