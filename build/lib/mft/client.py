@@ -2,7 +2,7 @@ import time
 import xml.etree.ElementTree as ET
 from collections import deque
 from datetime import datetime, timedelta
-from urllib.parse import urlsplit, unquote, urljoin
+from urllib.parse import urlsplit, unquote, urljoin, quote
 import urllib3
 
 import requests
@@ -120,7 +120,7 @@ class Client:
         }
         for index, file in enumerate(files):
             params['TransferID'] = index + 1
-            params['File'] = file
+            params['File'] = quote(file)
             self.session.post(urljoin(self.host,
                                       fr"Web%20Client/Share/MultipleFileUploadResult.htm"),
                               files={"file": open(file, 'rb')}, params=params)

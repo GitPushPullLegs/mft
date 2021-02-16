@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: mft
-Version: 0.0.5
+Version: 0.0.6
 Summary: A package to facilitate sharing files via SolarWinds Managed File Transfer.
 Home-page: https://github.com/GitPushPullLegs/mft
 Author: Joe Aguilar
