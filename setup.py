@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 from mft import __version__
 
 setup(
