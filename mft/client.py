@@ -67,6 +67,8 @@ class Client:
                           password: str = None, subject: str = "File Share", comments: str = None) -> str:
         """
         Uploads the files to the MFT server and returns the URL to be shared with the recipient.
+        :param comments: A comment to attach to the file share.
+        :param subject: The subject of the file share.
         :param files: A list of the files to be shared with this link.
         :param expiry: A timestamp for when the files should expire; defaults to a month away.
         :param password: An optional password to protect the files.
