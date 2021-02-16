@@ -4,6 +4,7 @@ from collections import deque
 from datetime import datetime, timedelta
 from urllib.parse import urlsplit, unquote, urljoin, quote
 import urllib3
+import os
 
 import requests
 
@@ -120,7 +121,7 @@ class Client:
         }
         for index, file in enumerate(files):
             params['TransferID'] = index + 1
-            params['File'] = quote(file)
+            params['File'] = quote(os.path.split(file)[-1])
             self.session.post(urljoin(self.host,
                                       fr"Web%20Client/Share/MultipleFileUploadResult.htm"),
                               files={"file": open(file, 'rb')}, params=params)
