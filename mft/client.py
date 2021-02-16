@@ -32,6 +32,7 @@ class Client:
         }
         self.visit_history = deque(maxlen=10)
         self.session = requests.session()
+        self.session.verify = False
         self.session.headers.update(self._HEADERS)
         self.session.hooks['response'].append(self._event_hooks)
         try:
