@@ -3,6 +3,7 @@ import xml.etree.ElementTree as ET
 from collections import deque
 from datetime import datetime, timedelta
 from urllib.parse import urlsplit, unquote, urljoin
+import urllib3
 
 import requests
 
@@ -33,6 +34,7 @@ class Client:
         self.visit_history = deque(maxlen=10)
         self.session = requests.session()
         self.session.verify = False
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.session.headers.update(self._HEADERS)
         self.session.hooks['response'].append(self._event_hooks)
         try:
