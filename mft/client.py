@@ -81,10 +81,8 @@ class Client:
         :return: The link to the files.
         """
         data = self._create_file_share(subject=subject, comments=comments, expiry=expiry, password=password)
-        url = data['url']
-        token = data['token']
-        self._upload_files(files=files, token=token)
-        return url
+        self._upload_files(files=files, token=data['token'])
+        return data['url']
 
     def _create_file_share(self, subject: str, comments: str, expiry: int, password: str = None):
         """Creates a file share in MFT and returns the url and token. Expiration defaults to a month from run."""
