@@ -48,7 +48,7 @@ class Client:
         return self.visit_history[-1].status_code == 200 and self.visit_history[-1].url == self.host
 
     def _event_hooks(self, r, *args, **kwargs):
-        scheme, netloc, path, query, frag = urlsplit(r.url)
+        path = urlsplit(r.url)[2]
         print(r.url, r.status_code)
         if path == '/' and r.status_code == 200:
             self.session.cookies.update(r.cookies.get_dict())
