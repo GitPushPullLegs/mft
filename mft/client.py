@@ -56,8 +56,10 @@ class Client:
                 'Command': 'Login',
                 'Sync': int(time.time())
             }
-            self.session.post(urljoin(self.host, fr"Web%20Client/Login.xml"),
+            response = self.session.post(urljoin(self.host, fr"Web%20Client/Login.xml"),
                               data=self.credentials, params=params)
+            if ET.fromstring(response.text).find(".//result").text != '0':
+                raise ConnectionRefusedError("Invalid credentials.")
         elif path == '/Web%20Client/Login.xml' and r.status_code == 200:
             self.session.get(urljoin(self.host, r"Web%20Client/Share/Console.htm"))
             self.csrf_token = ET.fromstring(r.text).find(".//CsrfToken").text
