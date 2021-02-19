@@ -4,6 +4,9 @@ from collections import deque
 from datetime import datetime, timedelta
 from urllib.parse import urlsplit, unquote, urljoin, quote
 import urllib3
+import os
+import enum
+import warnings
 
 import requests
 
@@ -17,6 +20,8 @@ class Client:
         Creates a client for SolarWinds Serv-U Managed File Transfer (MFT).
         :param host: Usually the URL to the login page.
         """
+        self.session = requests.session()
+        self.visit_history = deque(maxlen=10)
         self.host = host
 
     def login(self, username: str, password: str):
@@ -31,8 +36,6 @@ class Client:
             'language': 'en,US',
             'viewshare': ''
         }
-        self.visit_history = deque(maxlen=10)
-        self.session = requests.session()
         self.session.verify = False
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.session.headers.update(self._HEADERS)
@@ -44,10 +47,10 @@ class Client:
 
     def _login(self):
         self.session.get(self.host)
-        return self.visit_history[-1].status_code == 200 and self.visit_history[-1].url == self.host
+        return self.visit_history[-1].status_code == 200
 
     def _event_hooks(self, r, *args, **kwargs):
-        scheme, netloc, path, query, frag = urlsplit(r.url)
+        path = urlsplit(r.url)[2]
         print(r.url, r.status_code)
         if path == '/' and r.status_code == 200:
             self.session.cookies.update(r.cookies.get_dict())
@@ -55,8 +58,10 @@ class Client:
                 'Command': 'Login',
                 'Sync': int(time.time())
             }
-            self.session.post(urljoin(self.host, fr"Web%20Client/Login.xml"),
-                              data=self.credentials, params=params)
+            response = self.session.post(urljoin(self.host, fr"Web%20Client/Login.xml"),
+                                         data=self.credentials, params=params)
+            if ET.fromstring(response.text).find(".//result").text != '0':
+                raise ConnectionRefusedError("Invalid credentials.")
         elif path == '/Web%20Client/Login.xml' and r.status_code == 200:
             self.session.get(urljoin(self.host, r"Web%20Client/Share/Console.htm"))
             self.csrf_token = ET.fromstring(r.text).find(".//CsrfToken").text
@@ -66,10 +71,16 @@ class Client:
             self.visit_history.append(r)
             return r
 
-    def create_file_share(self, files: [str], expiry: int = int((datetime.now() + timedelta(days=30)).timestamp()),
+    class ShareType(enum.Enum):
+        request = 0
+        send = 1
+
+    def create_file_share(self, share_type: ShareType, files: [str] = None,
+                          expiry: int = int((datetime.now() + timedelta(days=30)).timestamp()),
                           password: str = None, subject: str = "File Share", comments: str = None) -> str:
         """
         Uploads the files to the MFT server and returns the URL to be shared with the recipient.
+        :param share_type: Whether you are requesting files or sending them.
         :param comments: A comment to attach to the file share.
         :param subject: The subject of the file share.
         :param files: A list of the files to be shared with this link.
@@ -77,16 +88,21 @@ class Client:
         :param password: An optional password to protect the files.
         :return: The link to the files.
         """
-        data = self._create_file_share(subject=subject, comments=comments, expiry=expiry, password=password)
-        url = data['url']
-        token = data['token']
-        self._upload_files(files=files, token=token)
-        return url
+        if share_type is Client.ShareType.send and (not files or not isinstance(files, list)):
+            raise AttributeError("If sending files, the files parameter must contain a list of files.")
+        elif share_type is Client.ShareType.request and files:
+            warnings.warn("You are requesting files but submitted files. They will be ignored.")
 
-    def _create_file_share(self, subject: str, comments: str, expiry: int, password: str = None):
+        data = self._create_file_share(share_type=share_type.value, subject=subject, comments=comments, expiry=expiry,
+                                       password=password)
+        if share_type is Client.ShareType.send:
+            self._upload_files(files=files, token=data['token'])
+        return data['url']
+
+    def _create_file_share(self, share_type: int, subject: str, comments: str, expiry: int, password: str = None):
         """Creates a file share in MFT and returns the url and token. Expiration defaults to a month from run."""
         payload = {
-            "ShareType": 1,
+            "ShareType": share_type,
             "RecipientEmailAddress": "",
             "SenderName": self.credentials['user'].split("@")[0],
             "SenderEmail": self.credentials['user'],
@@ -120,7 +136,7 @@ class Client:
         }
         for index, file in enumerate(files):
             params['TransferID'] = index + 1
-            params['File'] = quote(file)
+            params['File'] = quote(os.path.split(file)[-1])
             self.session.post(urljoin(self.host,
                                       fr"Web%20Client/Share/MultipleFileUploadResult.htm"),
                               files={"file": open(file, 'rb')}, params=params)
