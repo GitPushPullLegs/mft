@@ -18,6 +18,12 @@ class Client:
         Creates a client for SolarWinds Serv-U Managed File Transfer (MFT).
         :param host: Usually the URL to the login page.
         """
+        self.session = requests.session()
+        self.visit_history = deque(maxlen=10)
+        self.credentials = {
+            'language': 'en,US',
+            'viewshare': ''
+        }
         self.host = host
 
     def login(self, username: str, password: str):
@@ -26,14 +32,8 @@ class Client:
         :param username: Your username.
         :param password: Your password.
         """
-        self.credentials = {
-            'user': username,
-            'pword': password,
-            'language': 'en,US',
-            'viewshare': ''
-        }
-        self.visit_history = deque(maxlen=10)
-        self.session = requests.session()
+        self.credentials['user'] = username
+        self.credentials['pword'] = password
         self.session.verify = False
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.session.headers.update(self._HEADERS)
