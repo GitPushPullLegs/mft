@@ -20,10 +20,6 @@ class Client:
         """
         self.session = requests.session()
         self.visit_history = deque(maxlen=10)
-        self.credentials = {
-            'language': 'en,US',
-            'viewshare': ''
-        }
         self.host = host
 
     def login(self, username: str, password: str):
@@ -32,8 +28,12 @@ class Client:
         :param username: Your username.
         :param password: Your password.
         """
-        self.credentials['user'] = username
-        self.credentials['pword'] = password
+        self.credentials = {
+            'user': username,
+            'pword': password,
+            'language': 'en,US',
+            'viewshare': ''
+        }
         self.session.verify = False
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.session.headers.update(self._HEADERS)
