@@ -45,7 +45,7 @@ class Client:
 
     def _login(self):
         self.session.get(self.host)
-        return self.visit_history[-1].status_code == 200 and self.visit_history[-1].url == self.host
+        return self.visit_history[-1].status_code == 200
 
     def _event_hooks(self, r, *args, **kwargs):
         path = urlsplit(r.url)[2]
@@ -57,7 +57,7 @@ class Client:
                 'Sync': int(time.time())
             }
             response = self.session.post(urljoin(self.host, fr"Web%20Client/Login.xml"),
-                              data=self.credentials, params=params)
+                                         data=self.credentials, params=params)
             if ET.fromstring(response.text).find(".//result").text != '0':
                 raise ConnectionRefusedError("Invalid credentials.")
         elif path == '/Web%20Client/Login.xml' and r.status_code == 200:
