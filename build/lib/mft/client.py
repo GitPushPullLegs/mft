@@ -4,6 +4,7 @@ from collections import deque
 from datetime import datetime, timedelta
 from urllib.parse import urlsplit, unquote, urljoin, quote
 import urllib3
+import os
 
 import requests
 
@@ -47,7 +48,7 @@ class Client:
         return self.visit_history[-1].status_code == 200 and self.visit_history[-1].url == self.host
 
     def _event_hooks(self, r, *args, **kwargs):
-        scheme, netloc, path, query, frag = urlsplit(r.url)
+        path = urlsplit(r.url)[2]
         print(r.url, r.status_code)
         if path == '/' and r.status_code == 200:
             self.session.cookies.update(r.cookies.get_dict())
@@ -55,8 +56,10 @@ class Client:
                 'Command': 'Login',
                 'Sync': int(time.time())
             }
-            self.session.post(urljoin(self.host, fr"Web%20Client/Login.xml"),
+            response = self.session.post(urljoin(self.host, fr"Web%20Client/Login.xml"),
                               data=self.credentials, params=params)
+            if ET.fromstring(response.text).find(".//result").text != '0':
+                raise ConnectionRefusedError("Invalid credentials.")
         elif path == '/Web%20Client/Login.xml' and r.status_code == 200:
             self.session.get(urljoin(self.host, r"Web%20Client/Share/Console.htm"))
             self.csrf_token = ET.fromstring(r.text).find(".//CsrfToken").text
@@ -78,10 +81,8 @@ class Client:
         :return: The link to the files.
         """
         data = self._create_file_share(subject=subject, comments=comments, expiry=expiry, password=password)
-        url = data['url']
-        token = data['token']
-        self._upload_files(files=files, token=token)
-        return url
+        self._upload_files(files=files, token=data['token'])
+        return data['url']
 
     def _create_file_share(self, subject: str, comments: str, expiry: int, password: str = None):
         """Creates a file share in MFT and returns the url and token. Expiration defaults to a month from run."""
@@ -120,7 +121,7 @@ class Client:
         }
         for index, file in enumerate(files):
             params['TransferID'] = index + 1
-            params['File'] = quote(file)
+            params['File'] = quote(os.path.split(file)[-1])
             self.session.post(urljoin(self.host,
                                       fr"Web%20Client/Share/MultipleFileUploadResult.htm"),
                               files={"file": open(file, 'rb')}, params=params)

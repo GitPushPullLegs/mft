@@ -1,9 +1,8 @@
 from setuptools import setup
-from mft import __version__
 
 setup(
     name='mft',
-    version=__version__,
+    version='0.0.7',
     description="A package to facilitate sharing files via SolarWinds Managed File Transfer.",
     url='https://github.com/GitPushPullLegs/mft',
     author='Joe Aguilar',
