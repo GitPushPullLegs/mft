@@ -77,7 +77,8 @@ class Client:
 
     def create_file_share(self, share_type: ShareType, files: [str] = None,
                           expiry: int = int((datetime.now() + timedelta(days=30)).timestamp()),
-                          password: str = None, subject: str = "File Share", comments: str = None) -> str:
+                          password: str = None, subject: str = "File Share", comments: str = None,
+                          notify_when_downloaded: bool = True, recipient_addrs: [str] = None) -> str:
         """
         Uploads the files to the MFT server and returns the URL to be shared with the recipient.
         :param share_type: Whether you are requesting files or sending them.
@@ -94,19 +95,20 @@ class Client:
             warnings.warn("You are requesting files but submitted files. They will be ignored.")
 
         data = self._create_file_share(share_type=share_type.value, subject=subject, comments=comments, expiry=expiry,
-                                       password=password)
+                                       password=password, notify_when_downloaded=notify_when_downloaded, recipient_addrs=recipient_addrs)
         if share_type is Client.ShareType.send:
             self._upload_files(files=files, token=data['token'])
         return data['url']
 
-    def _create_file_share(self, share_type: int, subject: str, comments: str, expiry: int, password: str = None):
+    def _create_file_share(self, share_type: int, subject: str, comments: str, expiry: int, recipient_addrs: [str], notify_when_downloaded: bool,
+                           password: str = None):
         """Creates a file share in MFT and returns the url and token. Expiration defaults to a month from run."""
         payload = {
             "ShareType": share_type,
-            "RecipientEmailAddress": "",
-            "SenderName": self.credentials['user'].split("@")[0],
+            "RecipientEmailAddress": ";".join(recipient_addrs) if recipient_addrs else "",
+            "SenderName": self.credentials['user'],
             "SenderEmail": self.credentials['user'],
-            "NotifyUserOnGuestTransfer": 1,
+            "NotifyUserOnGuestTransfer": 1 if notify_when_downloaded else 0,
             "SenderCarbonCopy": 0,
             "EmailSubject": subject,
             "EmailBody": "" if not comments else comments,
