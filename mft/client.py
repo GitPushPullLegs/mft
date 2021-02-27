@@ -60,6 +60,7 @@ class Client:
             }
             response = self.session.post(urljoin(self.host, fr"Web%20Client/Login.xml"),
                                          data=self.credentials, params=params)
+            print(response.text)
             if ET.fromstring(response.text).find(".//result").text != '0':
                 raise ConnectionRefusedError("Invalid credentials.")
         elif path == '/Web%20Client/Login.xml' and r.status_code == 200:
@@ -100,6 +101,9 @@ class Client:
                                        password=password, notify_when_downloaded=notify_when_downloaded, recipient_addrs=recipient_addrs)
         if share_type is Client.ShareType.send:
             self._upload_files(files=files, token=data['token'])
+
+        if recipient_addrs:
+            self.send_file_share_invitation_email(share_token=data['token'], password=password)
         return data['url']
 
     def _create_file_share(self, share_type: int, subject: str, comments: str, expiry: int, recipient_addrs: [str], notify_when_downloaded: bool,
@@ -198,3 +202,15 @@ class Client:
             })
 
         return file_shares
+
+    def send_file_share_invitation_email(self, share_token: str, password: str = None):
+        """Sends an email to the recipients with a link to the file share."""
+        params = {
+            'Command': 'SendFileShareInvitation',
+            'ShareToken': share_token,
+            'IncludesPasswordInEmail': 1 if password else 0,
+            'Password': password if password else ""
+        }
+        response = self.session.post(self.host, params=params)
+        print(response.text)
+        return ET.fromstring(response.text).find(".//ResultText").text
