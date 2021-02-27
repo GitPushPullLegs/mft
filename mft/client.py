@@ -50,9 +50,8 @@ class Client:
         return self.visit_history[-1].status_code == 200
 
     def _event_hooks(self, r, *args, **kwargs):
-        path = urlsplit(r.url)[2]
-        print(r.url, r.status_code)
-        if path == '/' and r.status_code == 200:
+        scheme, netloc, path, query, frag = urlsplit(r.url)
+        if path == '/' and r.status_code == 200 and not query.startswith("Command"):
             self.session.cookies.update(r.cookies.get_dict())
             params = {
                 'Command': 'Login',
@@ -60,7 +59,6 @@ class Client:
             }
             response = self.session.post(urljoin(self.host, fr"Web%20Client/Login.xml"),
                                          data=self.credentials, params=params)
-            print(response.text)
             if ET.fromstring(response.text).find(".//result").text != '0':
                 raise ConnectionRefusedError("Invalid credentials.")
         elif path == '/Web%20Client/Login.xml' and r.status_code == 200:
@@ -212,5 +210,4 @@ class Client:
             'Password': password if password else ""
         }
         response = self.session.post(self.host, params=params)
-        print(response.text)
         return ET.fromstring(response.text).find(".//ResultText").text
