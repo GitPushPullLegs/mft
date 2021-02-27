@@ -87,6 +87,8 @@ class Client:
         :param files: A list of the files to be shared with this link.
         :param expiry: A timestamp for when the files should expire; defaults to a month away.
         :param password: An optional password to protect the files.
+        :param notify_when_downloaded: Defaults to true. Will send you an email when somebody has downloaded the files.
+        :param recipient_addrs: Optionally, you can add recipients that Serv-U will email for you.
         :return: The link to the files.
         """
         if share_type is Client.ShareType.send and (not files or not isinstance(files, list)):
