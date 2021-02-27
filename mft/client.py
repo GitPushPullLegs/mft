@@ -9,6 +9,7 @@ import enum
 import warnings
 
 import requests
+import re
 
 
 class Client:
@@ -211,3 +212,48 @@ class Client:
         }
         response = self.session.post(self.host, params=params)
         return ET.fromstring(response.text).find(".//ResultText").text
+
+    def get_file_share_info(self, share_token: str):
+        params = {
+            'Command': 'FileShareInfo',
+            'ShareToken': share_token
+        }
+        response = self.session.get(os.path.join(self.host, "Web%20Client/Share/ShareDetails.htm"), params=params)
+        subtext = re.findall(r"(?<=var HISTORY_ITEMS_PER_PAGE\=)[\w\W]+(?=;var sDLIconPath=)", response.text)[0]
+
+        comments = re.findall(r"(?<=g_sShareComment=decodeURIComponent\(\")[A-Za-z.\-%0-9]+(?=\"\))", subtext)
+        recipients = re.findall(r"(?<=g_sShareGuest=decodeURIComponent\(\")[A-Za-z.\-%0-9]+(?=\"\))", subtext)
+        password_hash = re.findall(r"(?<=g_sPassword=\")[A-Za-z.\-%0-9]+(?=\";)", subtext)
+
+        notification_status = {
+            '0': 'Pending',
+            '1': 'Sent',
+            '2': 'Error Sending',
+            '3': 'Downloaded',
+            '4': 'Received',
+            '5': 'Expired'
+        }
+
+        # TODO: Capture file data
+        # count = 1
+        # files = []
+        # file_data = re.findall(rf"(?<=id=\"sharerow{count}\">)[\w\W]+(?=<\/div>)")
+        # for each in file_data:
+        #     datum = {
+        #         'file_name'
+        #     }
+
+
+        result = {
+            'share_date': datetime.fromtimestamp(int(re.findall(r"(?<=g_sShareDate=GetLongDateTime\()[A-Za-z.\-%0-9]+(?=\))", subtext)[0])),
+            'subject': unquote(re.findall(r"(?<=g_sShareSubject=decodeURIComponent\(\")[A-Za-z.\-%0-9]+(?=\"\))", subtext)[0]),
+            'comments': "No comments added" if not comments else comments[0],
+            'recipients': "Undisclosed recipients" if not recipients else recipients[0],
+            'share_status': notification_status[re.findall(r"(?<=g_sShareStatus=)[0-9](?=;)", subtext)[0]],
+            'password_protected': False if not password_hash else True,
+            'expire_date': datetime.fromtimestamp(int(re.findall(r"(?<=g_nShareExpires=parseInt\(\")[A-Za-z.\-%0-9]+(?=\"\))", subtext)[0])),
+            'share_owner': re.findall(r"(?<=g_sShareOwnerName=decodeURIComponent\(\")[A-Za-z.\-%0-9]+(?=\"\))", subtext)[0],
+            'share_url': urljoin(self.host, f"?shareToken={share_token}"),
+            'files': []
+        }
+        return result
