@@ -1,5 +1,5 @@
 import time
-import xml.etree.ElementTree as ET
+from lxml import etree
 from collections import deque
 from datetime import datetime, timedelta
 from urllib.parse import urlsplit, unquote, urljoin, quote
@@ -8,7 +8,7 @@ import os
 import enum
 import warnings
 
-import requests
+from requests_html import HTMLSession
 import re
 
 
@@ -21,7 +21,7 @@ class Client:
         Creates a client for SolarWinds Serv-U Managed File Transfer (MFT).
         :param host: Usually the URL to the login page.
         """
-        self.session = requests.session()
+        self.session = HTMLSession()
         self.visit_history = deque(maxlen=10)
         self.host = host
 
