@@ -60,11 +60,14 @@ class Client:
             }
             response = self.session.post(urljoin(self.host, fr"Web%20Client/Login.xml"),
                                          data=self.credentials, params=params)
-            if ET.fromstring(response.text).find(".//result").text != '0':
+            root = etree.fromstring(response.text.encode('utf-8'),
+                                    parser=etree.XMLParser(ns_clean=True, recover=True, encoding='utf-8'))
+            if root.find("./result").text != '0':
                 raise ConnectionRefusedError("Invalid credentials.")
         elif path == '/Web%20Client/Login.xml' and r.status_code == 200:
             self.session.get(urljoin(self.host, r"Web%20Client/Share/Console.htm"))
-            self.csrf_token = ET.fromstring(r.text).find(".//CsrfToken").text
+            root = etree.fromstring(r.text.encode('utf-8'), parser=etree.XMLParser(ns_clean=True, recover=True, encoding='utf-8'))
+            self.csrf_token = root.find('./CsrfToken').text
             self.session.headers.update({'X-CSRF-Token': self.csrf_token})
             self.session.cookies.update(r.cookies.get_dict())
         else:
@@ -129,7 +132,7 @@ class Client:
 
         response = self.session.post(
             urljoin(self.host, r"Web%20Client/Share/CreateFileShare.xml"), data=payload, params=params)
-        root = ET.fromstring(response.text)
+        root = etree.fromstring(response.text)
         return {"url": unquote(root.find(".//ShareURL").text),  # ShareURL Encoded
                 "token": root.find(".//ShareToken").text}
 
@@ -156,7 +159,7 @@ class Client:
             'Sync': int(time.time())
         }
         response = self.session.post(urljoin(self.host, fr"Web%20Client/Result.xml"), params=params)
-        return ET.fromstring(response.text).find(".//ResultText").text
+        return etree.fromstring(response.text).find(".//ResultText").text
 
     def list_file_shares(self, count: int = 10):
         """
@@ -175,7 +178,7 @@ class Client:
         }
         response = self.session.post(urljoin(self.host, fr"Web%20Client/Share/ListFileShares.xml"), data=payload,
                                      params=params)
-        root = ET.fromstring(response.text).findall(".//share")
+        root = etree.fromstring(response.text).findall(".//share")
         notification_status = {
             '0': 'Pending',
             '1': 'Sent',
@@ -211,7 +214,7 @@ class Client:
             'Password': password if password else ""
         }
         response = self.session.post(self.host, params=params)
-        return ET.fromstring(response.text).find(".//ResultText").text
+        return etree.fromstring(response.text).find(".//ResultText").text
 
     def get_file_share_info(self, share_token: str):
         params = {
@@ -219,41 +222,43 @@ class Client:
             'ShareToken': share_token
         }
         response = self.session.get(os.path.join(self.host, "Web%20Client/Share/ShareDetails.htm"), params=params)
-        subtext = re.findall(r"(?<=var HISTORY_ITEMS_PER_PAGE\=)[\w\W]+(?=;var sDLIconPath=)", response.text)[0]
-
-        comments = re.findall(r"(?<=g_sShareComment=decodeURIComponent\(\")[A-Za-z.\-%0-9]+(?=\"\))", subtext)
-        recipients = re.findall(r"(?<=g_sShareGuest=decodeURIComponent\(\")[A-Za-z.\-%0-9]+(?=\"\))", subtext)
-        password_hash = re.findall(r"(?<=g_sPassword=\")[A-Za-z.\-%0-9]+(?=\";)", subtext)
-
-        notification_status = {
-            '0': 'Pending',
-            '1': 'Sent',
-            '2': 'Error Sending',
-            '3': 'Downloaded',
-            '4': 'Received',
-            '5': 'Expired'
-        }
-
-        # TODO: Capture file data
-        # count = 1
-        # files = []
-        # file_data = re.findall(rf"(?<=id=\"sharerow{count}\">)[\w\W]+(?=<\/div>)")
-        # for each in file_data:
-        #     datum = {
-        #         'file_name'
-        #     }
-
-
-        result = {
-            'share_date': datetime.fromtimestamp(int(re.findall(r"(?<=g_sShareDate=GetLongDateTime\()[A-Za-z.\-%0-9]+(?=\))", subtext)[0])),
-            'subject': unquote(re.findall(r"(?<=g_sShareSubject=decodeURIComponent\(\")[A-Za-z.\-%0-9]+(?=\"\))", subtext)[0]),
-            'comments': "No comments added" if not comments else comments[0],
-            'recipients': "Undisclosed recipients" if not recipients else recipients[0],
-            'share_status': notification_status[re.findall(r"(?<=g_sShareStatus=)[0-9](?=;)", subtext)[0]],
-            'password_protected': False if not password_hash else True,
-            'expire_date': datetime.fromtimestamp(int(re.findall(r"(?<=g_nShareExpires=parseInt\(\")[A-Za-z.\-%0-9]+(?=\"\))", subtext)[0])),
-            'share_owner': re.findall(r"(?<=g_sShareOwnerName=decodeURIComponent\(\")[A-Za-z.\-%0-9]+(?=\"\))", subtext)[0],
-            'share_url': urljoin(self.host, f"?shareToken={share_token}"),
-            'files': []
-        }
-        return result
+        response.html.render()
+        print(response.html.html)
+        # subtext = re.findall(r"(?<=var HISTORY_ITEMS_PER_PAGE\=)[\w\W]+(?=;var sDLIconPath=)", response.text)[0]
+        #
+        # comments = re.findall(r"(?<=g_sShareComment=decodeURIComponent\(\")[A-Za-z.\-%0-9]+(?=\"\))", subtext)
+        # recipients = re.findall(r"(?<=g_sShareGuest=decodeURIComponent\(\")[A-Za-z.\-%0-9]+(?=\"\))", subtext)
+        # password_hash = re.findall(r"(?<=g_sPassword=\")[A-Za-z.\-%0-9]+(?=\";)", subtext)
+        #
+        # notification_status = {
+        #     '0': 'Pending',
+        #     '1': 'Sent',
+        #     '2': 'Error Sending',
+        #     '3': 'Downloaded',
+        #     '4': 'Received',
+        #     '5': 'Expired'
+        # }
+        #
+        # # TODO: Capture file data
+        # # count = 1
+        # # files = []
+        # # file_data = re.findall(rf"(?<=id=\"sharerow{count}\">)[\w\W]+(?=<\/div>)")
+        # # for each in file_data:
+        # #     datum = {
+        # #         'file_name'
+        # #     }
+        #
+        #
+        # result = {
+        #     'share_date': datetime.fromtimestamp(int(re.findall(r"(?<=g_sShareDate=GetLongDateTime\()[A-Za-z.\-%0-9]+(?=\))", subtext)[0])),
+        #     'subject': unquote(re.findall(r"(?<=g_sShareSubject=decodeURIComponent\(\")[A-Za-z.\-%0-9]+(?=\"\))", subtext)[0]),
+        #     'comments': "No comments added" if not comments else comments[0],
+        #     'recipients': "Undisclosed recipients" if not recipients else recipients[0],
+        #     'share_status': notification_status[re.findall(r"(?<=g_sShareStatus=)[0-9](?=;)", subtext)[0]],
+        #     'password_protected': False if not password_hash else True,
+        #     'expire_date': datetime.fromtimestamp(int(re.findall(r"(?<=g_nShareExpires=parseInt\(\")[A-Za-z.\-%0-9]+(?=\"\))", subtext)[0])),
+        #     'share_owner': re.findall(r"(?<=g_sShareOwnerName=decodeURIComponent\(\")[A-Za-z.\-%0-9]+(?=\"\))", subtext)[0],
+        #     'share_url': urljoin(self.host, f"?shareToken={share_token}"),
+        #     'files': []
+        # }
+        # return result
