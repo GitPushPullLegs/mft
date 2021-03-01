@@ -52,6 +52,7 @@ class Client:
 
     def _event_hooks(self, r, *args, **kwargs):
         scheme, netloc, path, query, frag = urlsplit(r.url)
+        print(r.url, r.status_code)
         if path == '/' and r.status_code == 200 and not query.startswith("Command"):
             self.session.cookies.update(r.cookies.get_dict())
             params = {
@@ -132,9 +133,10 @@ class Client:
 
         response = self.session.post(
             urljoin(self.host, r"Web%20Client/Share/CreateFileShare.xml"), data=payload, params=params)
-        root = etree.fromstring(response.text)
-        return {"url": unquote(root.find(".//ShareURL").text),  # ShareURL Encoded
-                "token": root.find(".//ShareToken").text}
+        root = etree.fromstring(response.text.encode('utf-8'),
+                                parser=etree.XMLParser(ns_clean=True, recover=True, encoding='utf-8'))
+        return {"url": unquote(root.find("./ShareURL").text),  # ShareURL Encoded
+                "token": root.find("./ShareToken").text}
 
     def _upload_files(self, files: [str], token: str):
         """Uploads the files to the previously created file share."""
@@ -222,8 +224,9 @@ class Client:
             'ShareToken': share_token
         }
         response = self.session.get(os.path.join(self.host, "Web%20Client/Share/ShareDetails.htm"), params=params)
+        print(response.text)
         response.html.render()
-        print(response.html.html)
+        print(response.html.html)  #TODO: It says that JavaScript isn't enabled. That was the whole point.. To handle that...
         # subtext = re.findall(r"(?<=var HISTORY_ITEMS_PER_PAGE\=)[\w\W]+(?=;var sDLIconPath=)", response.text)[0]
         #
         # comments = re.findall(r"(?<=g_sShareComment=decodeURIComponent\(\")[A-Za-z.\-%0-9]+(?=\"\))", subtext)
