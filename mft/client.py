@@ -8,7 +8,7 @@ import os
 import enum
 import warnings
 
-from requests_html import HTMLSession
+import requests
 import re
 
 
@@ -21,7 +21,7 @@ class Client:
         Creates a client for SolarWinds Serv-U Managed File Transfer (MFT).
         :param host: Usually the URL to the login page.
         """
-        self.session = HTMLSession()
+        self.session = requests.session()
         self.visit_history = deque(maxlen=10)
         self.host = host
 
@@ -230,9 +230,6 @@ class Client:
             'ShareToken': share_token
         }
         response = self.session.get(os.path.join(self.host, "Web%20Client/Share/ShareDetails.htm"), params=params)
-        print(response.text)
-        response.html.render()
-        print(response.html.html)  #TODO: It says that JavaScript isn't enabled. That was the whole point.. To handle that...
         # subtext = re.findall(r"(?<=var HISTORY_ITEMS_PER_PAGE\=)[\w\W]+(?=;var sDLIconPath=)", response.text)[0]
         #
         # comments = re.findall(r"(?<=g_sShareComment=decodeURIComponent\(\")[A-Za-z.\-%0-9]+(?=\"\))", subtext)
