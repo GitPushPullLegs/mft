@@ -220,7 +220,9 @@ class Client:
             'Password': password if password else ""
         }
         response = self.session.post(self.host, params=params)
-        return etree.fromstring(response.text).find(".//ResultText").text
+        root = etree.fromstring(response.text.encode('utf-8'),
+                                parser=etree.XMLParser(ns_clean=True, recover=True, encoding='utf-8'))
+        return root.find("./ResultText").text
 
     def get_file_share_info(self, share_token: str):
         params = {
