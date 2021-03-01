@@ -161,7 +161,9 @@ class Client:
             'Sync': int(time.time())
         }
         response = self.session.post(urljoin(self.host, fr"Web%20Client/Result.xml"), params=params)
-        return etree.fromstring(response.text).find(".//ResultText").text
+        root = etree.fromstring(response.text.encode('utf-8'),
+                                parser=etree.XMLParser(ns_clean=True, recover=True, encoding='utf-8'))
+        return root.find("./ResultText").text
 
     def list_file_shares(self, count: int = 10):
         """
@@ -180,7 +182,9 @@ class Client:
         }
         response = self.session.post(urljoin(self.host, fr"Web%20Client/Share/ListFileShares.xml"), data=payload,
                                      params=params)
-        root = etree.fromstring(response.text).findall(".//share")
+        root = etree.fromstring(response.text.encode('utf-8'),
+                                parser=etree.XMLParser(ns_clean=True, recover=True, encoding='utf-8'))
+        share_results = root.findall("./share")
         notification_status = {
             '0': 'Pending',
             '1': 'Sent',
@@ -191,7 +195,7 @@ class Client:
         }
 
         file_shares = []
-        for datum in root:
+        for datum in share_results:
             file_shares.append({
                 "share_token": datum.find(".//ShareToken").text,
                 "has_password": True if datum.find(".//HasPassword").text == '1' else False,
