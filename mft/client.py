@@ -197,16 +197,16 @@ class Client:
         file_shares = []
         for datum in share_results:
             file_shares.append({
-                "share_token": datum.find(".//ShareToken").text,
-                "has_password": True if datum.find(".//HasPassword").text == '1' else False,
+                "share_token": datum.find("./ShareToken").text,
+                "has_password": True if datum.find("./HasPassword").text == '1' else False,
                 "date_created": datetime.fromtimestamp(int(datum.find(".//DateCreated").text)).strftime("%m/%d/%Y"),
-                "message_subject": unquote(datum.find(".//MsgSubject").text),
-                "first_recipient": datum.find(".//FirstRecipient").text,
-                "number_of_recipients": datum.find(".//NumRecipients").text,
+                "message_subject": unquote(datum.find("./MsgSubject").text),
+                "first_recipient": datum.find("./FirstRecipient").text,
+                "number_of_recipients": datum.find("./NumRecipients").text,
                 "notification_status": notification_status[datum.find(".//NotificationStatus").text],
-                "total_file_size": datum.find(".//TotalFileSize").text,
-                "number_of_files": datum.find(".//NumFiles").text,
-                "date_of_expiration": datetime.fromtimestamp(int(datum.find(".//DateExpiration").text)).strftime("%m/%d/%Y")
+                "total_file_size": datum.find("./TotalFileSize").text,
+                "number_of_files": datum.find("./NumFiles").text,
+                "date_of_expiration": datetime.fromtimestamp(int(datum.find("./DateExpiration").text)).strftime("%m/%d/%Y")
             })
 
         return file_shares
