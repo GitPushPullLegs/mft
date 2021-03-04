@@ -9,7 +9,6 @@ import enum
 import warnings
 
 import requests
-import re
 
 
 class Client:
