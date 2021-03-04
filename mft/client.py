@@ -199,7 +199,7 @@ class Client:
             file_shares.append({
                 "share_token": datum.find("./ShareToken").text,
                 "has_password": True if datum.find("./HasPassword").text == '1' else False,
-                "date_created": datetime.fromtimestamp(int(datum.find(".//DateCreated").text)).strftime("%m/%d/%Y"),
+                "date_created": datetime.fromtimestamp(int(datum.find("./DateCreated").text)).strftime("%m/%d/%Y"),
                 "message_subject": unquote(datum.find("./MsgSubject").text),
                 "first_recipient": datum.find("./FirstRecipient").text,
                 "number_of_recipients": datum.find("./NumRecipients").text,
